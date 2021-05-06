@@ -91,7 +91,7 @@ void wait_for_start(){
 	 char buff[1024];
 	 read_from_pipe_blocking("MegaMind_engine_response", buff, 1024);
 	 text_cmd = new std::string(buff);
-	 std::cout << "MJ MJ MJ\t"<<*text_cmd<<"\n";
+	 //std::cout << "MJ MJ MJ\t"<<*text_cmd<<"\n";
 	 *(static_audioProvider->MegaMind_text_cmd)= *text_cmd;
 	 write_to_pipe("desision_is_ready","s");
          std::cout<<"should start recording\n"; 

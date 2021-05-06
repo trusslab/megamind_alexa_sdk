@@ -476,7 +476,7 @@ if(config_use_text == false){
     }
 }
    std::string text_cmd = "What time is it?"; 
-   std::cout<<"\n\n\n\n\n\nMMMMMMMOOOOOHHHHHAAMMMMAAAAD\n\n\n\n\n\n";
+//   std::cout<<"\n\n\n\n\n\nMMMMMMMOOOOOHHHHHAAMMMMAAAAD\n\n\n\n\n\n";
     *(provider.MegaMind_begin_index) = begin;
    //*(provider.MegaMind_StartRecording) = 1;
    write_to_pipe("listen_event","s");
@@ -485,7 +485,7 @@ if(config_use_text == false){
    //while( *(provider.MegaMind_Desision_Isready) == 0);
    std::cout<<"executeRecognize : after while wait\n";
    text_cmd = *(provider.MegaMind_text_cmd);
-   std::cout<<"MMM\t"<<text_cmd;
+  // std::cout<<"MMM\t"<<text_cmd;
   // *(provider.MegaMind_Desision_Isready) = 0;
   // if (*(provider.MegaMind_Allowed) == 0){
   //      ACSDK_ERROR(LX("executeRecognizeFailed").d("reason", "MegaMind doesnot allow"));
@@ -494,7 +494,7 @@ if(config_use_text == false){
   // *(provider.MegaMind_Allowed) = 0;
 //MegaMind Start
 if(config_use_text == true){
-	std::cout<<"Oh, yea! it is text format!\n";
+//	std::cout<<"Oh, yea! it is text format!\n";
     // If this is a barge-in, verify that it is permitted.
     switch (m_state) {
         case ObserverInterface::State::IDLE:
@@ -905,7 +905,7 @@ bool AudioInputProcessor::executeExpectSpeech(std::chrono::milliseconds timeout,
         info->result->setCompleted();
     }
     removeDirective(info);
-    std::cout<<"MJ[0]\n";
+    //std::cout<<"MJ[0]\n";
 //MegaMind
 if(config_use_text == true){
         return executeRecognize(m_lastAudioProvider, "");
