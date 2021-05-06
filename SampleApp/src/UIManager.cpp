@@ -23,6 +23,7 @@
 
 #include "SampleApp/ConsolePrinter.h"
 
+extern void write_to_pipe(std::string  name, std::string  datastr);
 namespace alexaClientSDK {
 namespace sampleApp {
 
@@ -401,7 +402,9 @@ void UIManager::printResetWarning() {
 void UIManager::microphoneOn() {
     m_executor.submit([this]() { printState(); });
 }
-
+void send_end_session_notice(){
+	write_to_pipe("session_end","s");
+}
 void UIManager::printState() {
     if (m_connectionStatus == avsCommon::sdkInterfaces::ConnectionStatusObserverInterface::Status::DISCONNECTED) {
         ConsolePrinter::prettyPrint("Client not connected!");
@@ -411,6 +414,7 @@ void UIManager::printState() {
         switch (m_dialogState) {
             case DialogUXState::IDLE:
                 ConsolePrinter::prettyPrint("Alexa is currently idle!");
+		send_end_session_notice();
                 return;
             case DialogUXState::LISTENING:
                 ConsolePrinter::prettyPrint("Listening...");

@@ -23,13 +23,17 @@
 
 #ifdef KWD_KITTAI
 /// The sensitivity of the Kitt.ai engine.
-static const double KITT_AI_SENSITIVITY = 0.6;
+//Mohammad
+////static const double KITT_AI_SENSITIVITY = 0.9;
+static const double KITT_AI_SENSITIVITY = 0.7;
 
 /// The audio amplifier level of the Kitt.ai engine.
-static const float KITT_AI_AUDIO_GAIN = 2.0;
+static const float KITT_AI_AUDIO_GAIN = 4.0;
 
 /// Whether Kitt.ai should apply front end audio processing.
-static const bool KITT_AI_APPLY_FRONT_END_PROCESSING = true;
+//Mohammad
+////static const bool KITT_AI_APPLY_FRONT_END_PROCESSING = true;
+static const bool KITT_AI_APPLY_FRONT_END_PROCESSING = false;
 #endif
 
 using namespace alexaClientSDK;

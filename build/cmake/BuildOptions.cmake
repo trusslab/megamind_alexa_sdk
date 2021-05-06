@@ -47,7 +47,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Determine the platform and compiler dependent flags.
 if (UNIX OR CMAKE_COMPILER_IS_GNUCXX)
-    set(CXX_PLATFORM_DEPENDENT_FLAGS_DEBUG      "-DDEBUG -DACSDK_DEBUG_LOG_ENABLED -Wall -Werror -Wsign-compare -g")
+#Mohammad start
+####    set(CXX_PLATFORM_DEPENDENT_FLAGS_DEBUG      "-DDEBUG -DACSDK_DEBUG_LOG_ENABLED -Wall -Werror -Wsign-compare -g")
+    set(CXX_PLATFORM_DEPENDENT_FLAGS_DEBUG      "-DDEBUG -DACSDK_DEBUG_LOG_ENABLED -Wall -Werror -Wsign-compare -pg -D_GLIBCXX_USE_CXX11_ABI=0")
+#Mohammad end
     set(CXX_PLATFORM_DEPENDENT_FLAGS_RELEASE    "-DNDEBUG -Wall -Werror -O2")
     set(CXX_PLATFORM_DEPENDENT_FLAGS_MINSIZEREL "-DNDEBUG -Wall -Werror -Os")
 elseif(MSVC)

@@ -30,9 +30,10 @@
 #include <ExternalMediaPlayer/ExternalMediaPlayer.h>
 #include <MediaPlayer/MediaPlayer.h>
 
+
+
 namespace alexaClientSDK {
 namespace sampleApp {
-
 /// Class to manage the top-level components of the AVS Client Application
 class SampleApplication {
 public:
@@ -147,7 +148,6 @@ private:
 
     /// The @c MediaPlayer used by @c SpeechSynthesizer.
     std::shared_ptr<mediaPlayer::MediaPlayer> m_speakMediaPlayer;
-
     /// The @c MediaPlayer used by @c AudioPlayer.
     std::shared_ptr<mediaPlayer::MediaPlayer> m_audioMediaPlayer;
 

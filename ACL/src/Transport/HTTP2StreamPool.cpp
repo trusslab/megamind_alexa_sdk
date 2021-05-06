@@ -30,9 +30,10 @@ static const std::string TAG("HTTP2StreamPool");
 #define LX(event) alexaClientSDK::avsCommon::utils::logger::LogEntry(TAG, event)
 
 using namespace avsCommon::utils;
-
-unsigned int HTTP2StreamPool::m_nextStreamId = 1;
-
+//Mohammad start
+//unsigned int HTTP2StreamPool::m_nextStreamId = 1;
+unsigned int HTTP2StreamPool::m_nextStreamId = 100;
+//Mohammad end
 HTTP2StreamPool::HTTP2StreamPool(
     const int maxStreams,
     std::shared_ptr<avsCommon::avs::attachment::AttachmentManager> attachmentManager) :

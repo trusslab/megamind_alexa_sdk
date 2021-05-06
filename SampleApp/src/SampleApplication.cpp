@@ -52,8 +52,47 @@
 #include <fstream>
 #include <csignal>
 
+
+//Mohammad Add
+//Mohammad add
+#include "sock.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <thread>
+#include <unistd.h>
+
+//#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+//#include <string.h>
+extern void wait_on_pipe(std::string  name);
+//Mohammd End
+
+
+
 namespace alexaClientSDK {
 namespace sampleApp {
+std::shared_ptr<mediaPlayer::MediaPlayer> static_speakMediaPlayer;
+void wait_for_mute(){
+      while(1){
+         wait_on_pipe("mute_pipe");
+         std::cout<<"mute request recieved\n";
+         static_speakMediaPlayer->setMute(true);
+         wait_on_pipe("unmute_pipe");
+         std::cout<<"unmute request recieved\n";
+         static_speakMediaPlayer->setMute(false);
+
+      }
+}
 
 /// The sample rate of microphone audio data.
 static const unsigned int SAMPLE_RATE_HZ = 16000;
@@ -314,7 +353,11 @@ bool SampleApplication::initialize(
         ACSDK_CRITICAL(LX("Failed to create media player for speech!"));
         return false;
     }
-
+//Mohammad start
+    static_speakMediaPlayer = m_speakMediaPlayer;
+     std::thread th4(wait_for_mute);
+     th4.detach();
+//Mohammad end
     m_audioMediaPlayer = alexaClientSDK::mediaPlayer::MediaPlayer::create(
         httpContentFetcherFactory, avsCommon::sdkInterfaces::SpeakerInterface::Type::AVS_SYNCED, "AudioMediaPlayer");
     if (!m_audioMediaPlayer) {

@@ -81,6 +81,13 @@ struct AudioProvider {
 
     /// Whether this @c AudioProvider should allow another @c AudioProvider to interrupt it.
     bool canBeOverridden;
+//Mohammad start
+    int * MegaMind_StartRecording;
+    int * MegaMind_Allowed;
+    int * MegaMind_Desision_Isready;
+    avsCommon::avs::AudioInputStream::Index *MegaMind_begin_index;
+    std::string *MegaMind_text_cmd;
+
 };
 
 inline AudioProvider::AudioProvider(
@@ -99,6 +106,15 @@ inline AudioProvider::AudioProvider(
         alwaysReadable{alwaysReadable},
         canOverride{canOverride},
         canBeOverridden{canBeOverridden} {
+        MegaMind_StartRecording = new int;
+	MegaMind_Allowed = new int;
+	MegaMind_Desision_Isready = new int;
+        MegaMind_begin_index = new avsCommon::avs::AudioInputStream::Index;
+        *MegaMind_StartRecording = 0;
+        *MegaMind_Desision_Isready = 0;
+        *MegaMind_Allowed = 0;
+        *MegaMind_begin_index = 0;
+	MegaMind_text_cmd = new std::string;
 }
 
 inline const AudioProvider& AudioProvider::null() {

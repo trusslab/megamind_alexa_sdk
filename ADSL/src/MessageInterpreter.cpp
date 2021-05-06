@@ -22,7 +22,27 @@
 #include <AVSCommon/Utils/Metrics.h>
 
 #include <AVSCommon/Utils/Logger/Logger.h>
+//MegaMind add
+//Mohammad add
+#include "sock.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <thread>
+#include <unistd.h>
 
+//#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+//MegaMind end
 namespace alexaClientSDK {
 namespace adsl {
 
@@ -82,7 +102,22 @@ MessageInterpreter::MessageInterpreter(
         m_directiveSequencer{directiveSequencer},
         m_attachmentManager{attachmentManager} {
 }
+//MeagMind Start
+void report(const char* msg, int terminate) {
+  perror(msg);
+  if (terminate) exit(-1); /* failure */
+}
 
+void send_to_MegaMind_engine(std::string cmd){	
+	std::string path = "/tmp/MegaMind/payload";
+        const char * myfifo = path.c_str();
+        const char * data = cmd.c_str();
+        int fd = open(myfifo, O_WRONLY);
+        write(fd , data , strlen(data) +1 );
+        close(fd);
+}
+//MegaMind end
+bool there_is_card = false;
 void MessageInterpreter::receive(const std::string& contextId, const std::string& message) {
     Document document;
 
@@ -107,11 +142,28 @@ void MessageInterpreter::receive(const std::string& contextId, const std::string
 
     // Retrieve values
     std::string payload;
+
     if (!retrieveValue(directiveIt->value, JSON_MESSAGE_PAYLOAD_KEY, &payload)) {
         sendParseValueException(JSON_MESSAGE_PAYLOAD_KEY, message);
         return;
     }
-
+//MegaMind Start
+    std::cout<<"this is your payload\n\n"<<payload<<"\n\n";
+    if (payload.find("caption") != std::string::npos){
+	if( payload.find("mega card") == std::string::npos){
+        	send_to_MegaMind_engine(payload);
+	}else{
+		there_is_card = true;
+	}
+	
+    }
+    if( there_is_card == true){
+	if(payload.find("textField") != std::string::npos ){
+		send_to_MegaMind_engine(payload);
+		there_is_card = false;
+	}
+    }
+//MegaMind end
     std::string avsNamespace;
     if (!retrieveValue(headerIt->value, JSON_MESSAGE_NAMESPACE_KEY, &avsNamespace)) {
         sendParseValueException(JSON_MESSAGE_NAMESPACE_KEY, message);

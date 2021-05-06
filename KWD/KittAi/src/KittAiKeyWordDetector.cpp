@@ -21,6 +21,7 @@
 
 #include "KittAi/KittAiKeyWordDetector.h"
 
+
 namespace alexaClientSDK {
 namespace kwd {
 

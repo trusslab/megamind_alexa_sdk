@@ -26,6 +26,46 @@
 #include <AVSCommon/AVS/Attachment/AttachmentUtils.h>
 
 #include "AIP/AudioInputProcessor.h"
+//MegaMind
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <thread>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+#include <AVSCommon/AVS/EventBuilder.h>
+bool config_use_text =true;
+//MegaMind end
+
+void wait_on_pipe(std::string  name){
+        std::string path = "/tmp/MegaMind/" + name;
+        const char * myfifo = path.c_str();
+        char buff[256];
+        int fd = open(myfifo, O_RDONLY);
+        read(fd , buff , 1);
+	std::cout<<"wait on pipe: "<<name<< " "<<buff<<"\n";
+        close(fd);
+
+}
+void write_to_pipe(std::string  name, std::string  datastr){
+        std::string path = "/tmp/MegaMind/" + name;
+        const char * myfifo = path.c_str();
+        const char * data = datastr.c_str();
+        int fd = open(myfifo, O_WRONLY);
+        write(fd , data , strlen(data) +1 );
+        close(fd);
+
+}
 
 namespace alexaClientSDK {
 namespace capabilityAgents {
@@ -164,7 +204,8 @@ std::future<bool> AudioInputProcessor::recognize(
     const ESPData& espData,
     std::shared_ptr<const std::vector<char>> KWDMetadata) {
     ACSDK_METRIC_IDS(TAG, "Recognize", "", "", Metrics::Location::AIP_RECEIVE);
-
+//MegaMind
+if(config_use_text == false){
     // If no begin index was provided, grab the current index ASAP so that we can start streaming from the time this
     // call was made.
     if (audioProvider.stream && INVALID_INDEX == begin) {
@@ -179,11 +220,13 @@ std::future<bool> AudioInputProcessor::recognize(
         }
         begin = reader->tell();
     }
-
+    
     if (!espData.isEmpty()) {
         m_executor.submit([this, espData]() { executePrepareEspPayload(espData); });
     }
-
+//MegaMind
+}
+    
     return m_executor.submit([this, audioProvider, initiator, begin, keywordEnd, keyword, KWDMetadata]() {
         return executeRecognize(audioProvider, initiator, begin, keywordEnd, keyword, KWDMetadata);
     });
@@ -374,6 +417,9 @@ bool AudioInputProcessor::executeRecognize(
     avsCommon::avs::AudioInputStream::Index end,
     const std::string& keyword,
     std::shared_ptr<const std::vector<char>> KWDMetadata) {
+//MegaMind
+    std::ostringstream initiatorPayloadJson;
+if(config_use_text == false){
     // Make sure we have a keyword if this is a wakeword initiator.
     if (Initiator::WAKEWORD == initiator && keyword.empty()) {
         ACSDK_ERROR(LX("executeRecognizeFailed").d("reason", "emptyKeywordWithWakewordInitiator"));
@@ -389,7 +435,6 @@ bool AudioInputProcessor::executeRecognize(
         Initiator::WAKEWORD == initiator && begin != INVALID_INDEX && begin >= preroll && end != INVALID_INDEX;
 
     // If we will be enabling false wakeword detection, add preroll and build the initiator payload.
-    std::ostringstream initiatorPayloadJson;
     // TODO: Consider reworking this code to use RapidJSON - ACSDK-279.
     if (falseWakewordDetection) {
         // clang-format off
@@ -401,7 +446,8 @@ bool AudioInputProcessor::executeRecognize(
         // clang-format on
         begin -= preroll;
     }
-
+//MegaMind
+}
     // Build the initiator json.
     std::ostringstream initiatorJson;
     // clang-format off
@@ -423,11 +469,76 @@ bool AudioInputProcessor::executeRecognize(
     avsCommon::avs::AudioInputStream::Index begin,
     const std::string& keyword,
     std::shared_ptr<const std::vector<char>> KWDMetadata) {
+if(config_use_text == false){
     if (!provider.stream) {
         ACSDK_ERROR(LX("executeRecognizeFailed").d("reason", "nullAudioInputStream"));
         return false;
     }
+}
+   std::string text_cmd = "What time is it?"; 
+   std::cout<<"\n\n\n\n\n\nMMMMMMMOOOOOHHHHHAAMMMMAAAAD\n\n\n\n\n\n";
+    *(provider.MegaMind_begin_index) = begin;
+   //*(provider.MegaMind_StartRecording) = 1;
+   write_to_pipe("listen_event","s");
+   std::cout<<"executeRecognize : before while wait\n";
+   wait_on_pipe("desision_is_ready");
+   //while( *(provider.MegaMind_Desision_Isready) == 0);
+   std::cout<<"executeRecognize : after while wait\n";
+   text_cmd = *(provider.MegaMind_text_cmd);
+   std::cout<<"MMM\t"<<text_cmd;
+  // *(provider.MegaMind_Desision_Isready) = 0;
+  // if (*(provider.MegaMind_Allowed) == 0){
+  //      ACSDK_ERROR(LX("executeRecognizeFailed").d("reason", "MegaMind doesnot allow"));
+  //      return false;
+  // }
+  // *(provider.MegaMind_Allowed) = 0;
+//MegaMind Start
+if(config_use_text == true){
+	std::cout<<"Oh, yea! it is text format!\n";
+    // If this is a barge-in, verify that it is permitted.
+    switch (m_state) {
+        case ObserverInterface::State::IDLE:
+        case ObserverInterface::State::EXPECTING_SPEECH:
+            break;
+        case ObserverInterface::State::RECOGNIZING:
+            break;
+        case ObserverInterface::State::BUSY:
+            ACSDK_ERROR(LX("executeRecognizeFailed").d("reason", "Barge-in is not permitted while busy"));
+            return false;
+    }
+         // Assemble the event payload.
+    std::ostringstream payload;
+    std::string usr_str = text_cmd;
+    //usr_str.erase(usr_str.find('\0'));
+    // clang-format off
+    payload << R"({)"
+                   R"("textMessage":")" << usr_str << R"(")";
 
+    // The initiator (or lack thereof) from a previous ExpectSpeech has precedence.
+    if (m_precedingExpectSpeechInitiator) {
+        if (!m_precedingExpectSpeechInitiator->empty()) {
+            payload << "," << R"(")" << INITIATOR_KEY << R"(":)" << *m_precedingExpectSpeechInitiator;
+        }
+        m_precedingExpectSpeechInitiator.reset();
+    } else if (!initiatorJson.empty()) {
+        payload << "," << initiatorJson;
+    }
+   payload << R"(})";
+    // clang-format on
+
+    setState(ObserverInterface::State::RECOGNIZING);
+    m_preparingToSend = true;
+    m_contextManager->getContext(shared_from_this());
+    m_expectingSpeechTimer.stop();
+    m_lastAudioProvider = provider;
+    m_recognizePayload = payload.str();
+    m_recognizeRequest.reset();
+
+    return true;
+    
+
+} 
+//MegaMind End
     std::unordered_map<int, std::string> mapSampleRatesAVSEncoding = {{32000, "OPUS"}};
     std::string avsEncodingFormat;
     std::unordered_map<int, std::string>::iterator itSampleRateAVSEncoding;
@@ -588,7 +699,8 @@ void AudioInputProcessor::executeOnContextAvailable(const std::string jsonContex
             LX("executeOnContextAvailableFailed").d("reason", "Not permitted in current state").d("state", m_state));
         return;
     }
-
+//MegaMind Start
+if(config_use_text == false){
     // Should already have a reader.
     if (!m_reader) {
         ACSDK_ERROR(LX("executeOnContextAvailableFailed").d("reason", "nullReader"));
@@ -601,7 +713,8 @@ void AudioInputProcessor::executeOnContextAvailable(const std::string jsonContex
         executeResetState();
         return;
     }
-
+}
+//MegaMind End
     // Start acquiring the channel right away; we'll service the callback after assembling our Recognize event.
     if (m_focusState != avsCommon::avs::FocusState::FOREGROUND) {
         if (!m_focusManager->acquireChannel(CHANNEL_NAME, shared_from_this(), NAMESPACE)) {
@@ -622,13 +735,21 @@ void AudioInputProcessor::executeOnContextAvailable(const std::string jsonContex
         m_espRequest->addObserver(shared_from_this());
     }
     auto msgIdAndJsonEvent = buildJsonEventString("Recognize", dialogRequestId, m_recognizePayload, jsonContext);
+//MegaMind 
+if(config_use_text == true){
+    msgIdAndJsonEvent =  avsCommon::avs::buildJsonEventString("Text", "TextMessage", dialogRequestId, m_recognizePayload, jsonContext);
+}
+//MegaMind end
     m_recognizeRequest = std::make_shared<avsCommon::avs::MessageRequest>(msgIdAndJsonEvent.second);
 
     if (m_KWDMetadataReader) {
         m_recognizeRequest->addAttachmentReader(KWD_METADATA_FIELD_NAME, m_KWDMetadataReader);
     }
+//MegaMind
+if(config_use_text == false){
     m_recognizeRequest->addAttachmentReader(AUDIO_ATTACHMENT_FIELD_NAME, m_reader);
-
+}
+//MegaMind end
     // Release ownership of the metadata so it can be released once ACL will finish sending the message.
     m_KWDMetadataReader.reset();
 
@@ -691,13 +812,16 @@ bool AudioInputProcessor::executeStopCapture(bool stopImmediately, std::shared_p
     // Create a lambda to do the StopCapture.
     std::function<void()> stopCapture = [=] {
         ACSDK_DEBUG(LX("stopCapture").d("stopImmediately", stopImmediately));
+//MegaMind
+if(config_use_text == false){
         if (stopImmediately) {
             m_reader->close(avsCommon::avs::attachment::AttachmentReader::ClosePoint::IMMEDIATELY);
         } else {
             m_reader->close(avsCommon::avs::attachment::AttachmentReader::ClosePoint::AFTER_DRAINING_CURRENT_BUFFER);
         }
-
         m_reader.reset();
+}
+//MegaMind
         setState(ObserverInterface::State::BUSY);
 
         if (info) {
@@ -781,7 +905,12 @@ bool AudioInputProcessor::executeExpectSpeech(std::chrono::milliseconds timeout,
         info->result->setCompleted();
     }
     removeDirective(info);
-
+    std::cout<<"MJ[0]\n";
+//MegaMind
+if(config_use_text == true){
+        return executeRecognize(m_lastAudioProvider, "");
+}
+//MegaMind
     // If possible, start recognizing immediately.
     if (m_lastAudioProvider && m_lastAudioProvider.alwaysReadable) {
         return executeRecognize(m_lastAudioProvider, "");
